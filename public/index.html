@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Asteroides NASA</title>
+
+  <!-- 🌍 Leaflet mapa -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+  <style>
+    body {
+      font-family: Arial;
+      background: radial-gradient(circle at top, #0b0f1a, #05060a);
+      color: white;
+      text-align: center;
+    }
+
+    h1 {
+      margin-top: 25px;
+    }
+
+    /* 🚀 BOTÓN */
+    .btn {
+      background: linear-gradient(135deg, #00c6ff, #0072ff);
+      color: white;
+      border: none;
+      padding: 12px 25px;
+      font-size: 16px;
+      border-radius: 30px;
+      cursor: pointer;
+      margin: 20px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+      transition: all 0.3s ease;
+      font-weight: bold;
+    }
+
+    .btn:hover {
+      transform: scale(1.1);
+    }
+
+    .btn:active {
+      transform: scale(0.95);
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    /* 📊 ESTADÍSTICAS */
+    #stats {
+      margin: 10px;
+      font-size: 16px;
+      opacity: 0.9;
+    }
+
+    #status {
+      margin-top: 10px;
+      opacity: 0.8;
+    }
+
+    /* 📋 TABLA */
+    table {
+      margin: auto;
+      width: 85%;
+      border-collapse: collapse;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 0 15px rgba(0,0,0,0.4);
+    }
+
+    th, td {
+      padding: 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    th {
+      background: #1f2a44;
+      letter-spacing: 1px;
+    }
+
+    tr:hover {
+      background: rgba(255,255,255,0.05);
+    }
+
+    /* 🚦 COLORES */
+    .danger {
+      background: rgba(255, 50, 50, 0.15);
+    }
+
+    .safe {
+      background: rgba(50, 255, 120, 0.08);
+    }
+
+    /* 🌍 MAPA */
+    #map {
+      height: 350px;
+      width: 85%;
+      margin: 30px auto;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+
+<body>
+
+<h1>☄️ Asteroides cercanos a la Tierra</h1>
+
+<button class="btn" onclick="loadAsteroids()" id="btn">
+  🚀 Cargar datos NASA
+</button>
+
+<p id="stats"></p>
+<p id="status"></p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Nombre</th>
+      <th>Velocidad</th>
+      <th>Distancia</th>
+      <th>Peligroso</th>
+    </tr>
+  </thead>
+  <tbody id="data"></tbody>
+</table>
+
+<!-- 🌍 MAPA -->
+<div id="map"></div>
+
+<script>
+
+let map = L.map('map').setView([20, 0], 2);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '&copy; OpenStreetMap contributors'
+}).addTo(map);
+
+let markers = [];
+
+async function loadAsteroids() {
+  const btn = document.getElementById("btn");
+  const status = document.getElementById("status");
+  const stats = document.getElementById("stats");
+
+  btn.disabled = true;
+  btn.innerText = "⏳ Cargando...";
+  status.innerText = "Conectando con NASA... 🌌";
+
+  try {
+    const res = await fetch("/asteroids");
+    const data = await res.json();
+
+    data.sort((a, b) => a.distance_km - b.distance_km);
+
+    const table = document.getElementById("data");
+    table.innerHTML = "";
+
+    let dangerous = 0;
+    let safe = 0;
+
+    // 🧹 limpiar mapa
+    markers.forEach(m => map.removeLayer(m));
+    markers = [];
+
+    data.forEach(a => {
+      if (a.hazardous) dangerous++;
+      else safe++;
+
+      const rowClass = a.hazardous ? "danger" : "safe";
+
+      // 📋 tabla
+      table.innerHTML += `
+        <tr class="${rowClass}">
+          <td>${a.name}</td>
+          <td>${Number(a.speed_kmh).toLocaleString()} km/h</td>
+          <td>${Number(a.distance_km).toLocaleString()} km</td>
+          <td>${a.hazardous ? "☠️ Sí" : "🟢 No"}</td>
+        </tr>
+      `;
+
+      // 🌍 mapa (posición simulada)
+      const lat = Math.random() * 140 - 70;
+      const lng = Math.random() * 360 - 180;
+
+      const marker = L.circleMarker([lat, lng], {
+        radius: a.hazardous ? 10 : 6,
+        color: a.hazardous ? "red" : "lime"
+      }).addTo(map);
+
+      marker.bindPopup(`
+        <b>${a.name}</b><br>
+        ${a.hazardous ? "☠️ PELIGROSO" : "🟢 seguro"}
+      `);
+
+      markers.push(marker);
+    });
+
+    stats.innerHTML = `
+      ☠️ Peligrosos: ${dangerous} |
+      🟢 Seguros: ${safe} |
+      🌌 Total: ${data.length}
+    `;
+
+    status.innerText = "Datos cargados correctamente ✨";
+
+  } catch (err) {
+    console.log(err);
+    status.innerText = "Error conectando con NASA ❌";
+  }
+
+  btn.disabled = false;
+  btn.innerText = "🚀 Cargar datos NASA";
+}
+
+</script>
+
+</body>
+</html>
