@@ -104,30 +104,38 @@ async function cargarSenales() {
   estado.innerText = "📡 Escaneando el espacio...";
 
   try {
-    const res = await fetch("/aliens");
-    const data = await res.json();
+    const res = await fetch(
+  "https://api.nasa.gov/neo/rest/v1/feed?api_key=IoadGEecOXg1qQ4QgGsJndWSIAIfQg42rRjfjaPe"
+);
+   const json = await res.json();
 
-    tabla.innerHTML = "";
+  const objetos = Object.values(json.near_earth_objects).flat();
 
-    let hostiles = 0;
-    let seguros = 0;
+  tabla.innerHTML = "";
 
-    data.forEach(a => {
+  let hostiles = 0;
+  let seguros = 0;
 
-      if (a.hostil) hostiles++;
-      else seguros++;
+  objetos.forEach(obj => {
 
-      tabla.innerHTML += `
-        <tr>
-          <td>${a.nombre}</td>
-          <td>${Number(a.velocidad_kmh).toLocaleString()} km/h</td>
-          <td>${Number(a.distancia_km).toLocaleString()} km</td>
-          <td class="${a.hostil ? 'hostil' : 'seguro'}">
-            ${a.hostil ? 'HOSTIL' : 'SEGURO'}
-          </td>
-        </tr>
-      `;
-    });
+    const velocidad = obj.close_approach_data[0].relative_velocity.kilometers_per_hour;
+    const distancia = obj.close_approach_data[0].miss_distance.kilometers;
+    const hostil = obj.is_potentially_hazardous_asteroid;
+
+    if (hostil) hostiles++;
+    else seguros++;
+
+    tabla.innerHTML += `
+      <tr>
+        <td>👽 ${obj.name}</td>
+        <td>${Number(velocidad).toLocaleString()} km/h</td>
+        <td>${Number(distancia).toLocaleString()} km</td>
+        <td class="${hostil ? 'hostil' : 'seguro'}">
+          ${hostil ? 'HOSTIL' : 'SEGURO'}
+        </td>
+      </tr>
+    `;
+  });
 
     stats.innerText = `HOSTILES: ${hostiles} | SEGUROS: ${seguros}`;
 
