@@ -7,7 +7,7 @@ THE SIGNAL HAS BEEN DETECTED...
 
 <br><br>
 
-<a href="https://github.com/Namycoco/controlador"> <img src="https://img.shields.io/badge/🛸_VIEW_PROJECT-39FF14?style=for-the-badge&logo=github&logoColor=black" alt="View project"> </a>
+<a href="https://namycoco.github.io/controlador/"> <img src="https://img.shields.io/badge/🛸_VIEW_PROJECT-39FF14?style=for-the-badge&logo=github&logoColor=black" alt="View project"> </a>
 
 <br><br>
 
